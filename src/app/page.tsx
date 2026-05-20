@@ -124,50 +124,89 @@ export default function HomePage() {
                 icon: "🚗",
                 title: "Auto & Home",
                 desc: "Protect your vehicles and property with comprehensive personal lines coverage.",
-                cta: "Get Auto/Home Quote",
+                primary: { label: "Instant Quote", href: "https://trinitysolutionsins.propeller.insure/axelerator-public/", external: true },
+                secondary: { label: "Get Help", href: "/quote?type=both" },
               },
               {
                 icon: "❤️",
                 title: "Health Insurance",
                 desc: "Anthem BCBS of VA, short-term, student, and out-of-USA travel health plans.",
-                cta: "Get Health Quote",
+                primary: { label: "Anthem Quote", href: "https://agentsite.anthem.com/agentsite/ac/TrinitySolutions99", external: true },
+                secondary: { label: "Other Plans", href: "/quote?type=health" },
               },
               {
                 icon: "🌿",
                 title: "Life Insurance",
-                desc: "Instant life coverage via ETHOS — get approved in minutes, not days.",
-                cta: "Get Life Quote",
+                desc: "Instant life coverage via ETHOS — approved in minutes. Also offering Bestow plans.",
+                primary: { label: "Ethos · Apply Now", href: "https://agents.ethoslife.com/invite/3d18", external: true },
+                secondary: { label: "Bestow Option", href: "https://www.bestow.com/agents/hgi/?u=716e1720&utm_source=Abhishek_Thakar&utm_medium=agents", external: true },
               },
               {
                 icon: "🏨",
                 title: "Business Insurance",
                 desc: "Gas stations, convenience stores, hotels, motels, restaurants — we cover them all.",
-                cta: "Get Business Quote",
+                primary: { label: "Get Quote", href: "https://app.boldpenguin.com/start/tajbizllcdbatrinitysolutions", external: true },
+                secondary: { label: "Talk to Agent", href: "/quote?type=business" },
               },
               {
                 icon: "👷",
                 title: "Workers Comp",
                 desc: "Make sure your employees are covered. Fast quotes for businesses of all sizes.",
-                cta: "Get Workers Comp Quote",
+                primary: { label: "SolePro Quote", href: "https://app.solepro.com/AgencyProfile/TAJBIZLLCDBATrinitySolutions/f5686c4f-0acc-48da-bfc2-43f97737e716", external: true },
+                secondary: { label: "Talk to Agent", href: "/quote?type=workers_comp" },
               },
               {
                 icon: "✈️",
-                title: "Travel Insurance",
+                title: "Travel & Visitors",
                 desc: "Cover yourself when visiting or hosting family from abroad. Out-of-USA plans available.",
-                cta: "Get Travel Quote",
+                primary: { label: "GeoBlue Travel", href: "https://www.geobluetravelinsurance.com/product_overview.cfm?link_id=169813", external: true },
+                secondary: { label: "Visitors USA", href: "https://producer.imglobal.com/international-insurance-plans.aspx?imgac=540029", external: true },
               },
             ].map((s) => (
-              <Link
+              <div
                 key={s.title}
-                href="/quote"
-                className="bg-[#0a0f1e] border border-white/10 rounded-2xl p-7 hover:border-[#d4af37]/50 hover:bg-[#0a0f1e] transition-all duration-200 group cursor-pointer"
+                className="bg-[#0a0f1e] border border-white/10 rounded-2xl p-7 hover:border-[#d4af37]/50 transition-all duration-200 group flex flex-col"
               >
                 <div className="text-4xl mb-4">{s.icon}</div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#d4af37] transition-colors">{s.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed mb-4">{s.desc}</p>
-                <span className="text-xs text-[#d4af37] font-semibold group-hover:underline">{s.cta} →</span>
-              </Link>
+                <p className="text-white/50 text-sm leading-relaxed mb-5 flex-1">{s.desc}</p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={s.primary.href}
+                    {...(s.primary.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-bold text-sm py-2.5 px-4 rounded-lg text-center transition-colors"
+                  >
+                    {s.primary.label} →
+                  </a>
+                  <a
+                    href={s.secondary.href}
+                    {...(s.secondary.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className="border border-white/15 hover:border-[#d4af37]/40 text-white/70 hover:text-white text-sm py-2.5 px-4 rounded-lg text-center transition-colors"
+                  >
+                    {s.secondary.label}
+                  </a>
+                </div>
+              </div>
             ))}
+          </div>
+
+          {/* Will & Trust callout */}
+          <div className="mt-8 bg-[#0a0f1e] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">📜</div>
+              <div>
+                <h3 className="text-white font-bold text-lg">Will & Trust Planning</h3>
+                <p className="text-white/50 text-sm">Protect your legacy with NetLaw estate planning.</p>
+              </div>
+            </div>
+            <a
+              href="https://i.netlaw.com/hze-mbxc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-bold text-sm py-2.5 px-6 rounded-lg transition-colors whitespace-nowrap"
+            >
+              Start Estate Plan →
+            </a>
           </div>
         </div>
       </section>
