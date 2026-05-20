@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["pocketbase"],
-  },
+  // pocketbase uses node-only APIs; keep it out of the browser bundle
+  serverExternalPackages: ["pocketbase"],
   images: {
     remotePatterns: [
       {

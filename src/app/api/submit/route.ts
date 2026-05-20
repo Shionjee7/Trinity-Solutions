@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Kick off async extraction if a file was attached
     if (policy_file && policy_file.size > 0) {
       // Fire-and-forget — don't await so the user gets a fast response
-      fetch(`${process.env.NEXT_PUBLIC_PB_URL?.replace("api.", "") || "http://localhost:3000"}/api/extract`, {
+      fetch(`${process.env.NEXT_INTERNAL_URL || "http://localhost:3000"}/api/extract`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: record.id }),
