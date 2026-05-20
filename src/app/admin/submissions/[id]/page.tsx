@@ -55,8 +55,8 @@ export default async function SubmissionDetailPage({
 }) {
   // Auth check
   const cookieStore = cookies();
-  const session = cookieStore.get("admin_session");
-  if (!session || session.value !== "1") {
+  const token = cookieStore.get("admin_token");
+  if (!token?.value) {
     redirect("/admin");
   }
 
@@ -64,8 +64,9 @@ export default async function SubmissionDetailPage({
   if (!submission) notFound();
 
   const pb = createPocketBase();
+  // pb.files.getUrl is the correct method name in pocketbase@0.21.x
   const pdfUrl = submission.policy_file
-    ? pb.files.getURL(submission as Parameters<typeof pb.files.getURL>[0], submission.policy_file)
+    ? pb.files.getUrl(submission as Parameters<typeof pb.files.getUrl>[0], submission.policy_file)
     : null;
 
   const ext: ExtractedPolicyData | null =
