@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trinity Solutions · Insurance Quotes",
+  title: "Trinity Solutions · Insurance, with a personal touch",
   description:
-    "Get a free insurance quote from Trinity Solutions. Auto, home, and bundle coverage options available.",
-  keywords: "insurance quote, auto insurance, home insurance, Trinity Solutions",
+    "Independent insurance agency in Glen Allen, Virginia. Auto, home, health, life, business — one agency, 30+ carriers.",
+  keywords: "insurance, auto insurance, home insurance, health insurance, Glen Allen Virginia, Trinity Solutions",
 };
 
 export default function RootLayout({
@@ -15,9 +15,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#0a0f1e] text-white antialiased">
-        {children}
-      </body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

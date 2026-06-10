@@ -1,373 +1,543 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
-export default function HomePage() {
+/* ── SVG icon helper ─────────────────────────────────────────────────────── */
+function Icon({ name, size = 20, stroke = 1.6 }: { name: string; size?: number; stroke?: number }) {
+  const props = {
+    width: size, height: size, viewBox: "0 0 24 24",
+    fill: "none" as const, stroke: "currentColor",
+    strokeWidth: stroke, strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+  };
+  switch (name) {
+    case "auto": return <svg {...props}><path d="M3 13l1.6-4.8A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.2L21 13" /><path d="M3 13v5h2v-2h14v2h2v-5H3z" /><circle cx="7" cy="16" r="1.3" /><circle cx="17" cy="16" r="1.3" /></svg>;
+    case "health": return <svg {...props}><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" /><path d="M9 11h2v-2h2v2h2v2h-2v2h-2v-2H9z" /></svg>;
+    case "life": return <svg {...props}><path d="M12 21c-4.5-3-7-6.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 3.5-2.5 7-7 10z" /></svg>;
+    case "business": return <svg {...props}><rect x="3" y="8" width="18" height="12" rx="1.5" /><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 13h18" /></svg>;
+    case "workers": return <svg {...props}><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" /><circle cx="12" cy="8" r="3.2" /><path d="M7 9a5 5 0 0 1 10 0" /></svg>;
+    case "travel": return <svg {...props}><path d="M2 16l20-7-7 13-2-6-6-2 5-5z" /></svg>;
+    case "scroll": return <svg {...props}><path d="M6 4h11a2 2 0 0 1 2 2v11a3 3 0 0 0 3 3H8a2 2 0 0 1-2-2V4z" /><path d="M6 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2" /><path d="M10 9h6M10 13h6" /></svg>;
+    case "doc": return <svg {...props}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M8 13h8M8 17h6" /></svg>;
+    case "spark": return <svg {...props}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" /></svg>;
+    case "users": return <svg {...props}><circle cx="9" cy="9" r="3.2" /><path d="M3 19a6 6 0 0 1 12 0" /><path d="M16 4a3.5 3.5 0 0 1 0 7M21 19a5 5 0 0 0-4-4.9" /></svg>;
+    case "id": return <svg {...props}><rect x="3" y="6" width="18" height="12" rx="2" /><circle cx="9" cy="12" r="2" /><path d="M14 10h4M14 13h3" /></svg>;
+    case "shield": return <svg {...props}><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z" /><path d="M9 12l2 2 4-4" /></svg>;
+    case "phone": return <svg {...props}><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v3a2 2 0 0 1-2 2A14 14 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>;
+    case "mail": return <svg {...props}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 7 9-7" /></svg>;
+    case "pin": return <svg {...props}><path d="M12 21s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></svg>;
+    case "clock": return <svg {...props}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
+    case "chat": return <svg {...props}><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4V6a1 1 0 0 1 1-1z" /></svg>;
+    case "arrow-right": return <svg {...props}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+    default: return null;
+  }
+}
+
+/* ── Data ────────────────────────────────────────────────────────────────── */
+
+const SERVICES = [
+  {
+    icon: "auto",     title: "Auto & Home",        kicker: "Personal Lines",
+    desc: "Protect your vehicles and property. Bundle for the best rate across 30+ carriers.",
+    primaryLabel: "Instant Quote",  primaryHref: "https://trinitysolutionsins.propeller.insure/axelerator-public/", primaryExternal: true,
+    secondaryLabel: "Talk to Agent", secondaryIsQuote: true,
+  },
+  {
+    icon: "health",   title: "Health Insurance",   kicker: "Anthem · UHC",
+    desc: "Anthem BCBS of VA, short-term plans, student & travel health coverage, plans for parents visiting the USA.",
+    primaryLabel: "Anthem Quote",   primaryHref: "https://agentsite.anthem.com/agentsite/ac/TrinitySolutions99", primaryExternal: true,
+    secondaryLabel: "UHC Option",   secondaryHref: "https://shop.uhone.com/en/quote/census?brokerid=AA5274750", secondaryExternal: true,
+  },
+  {
+    icon: "life",     title: "Life Insurance",     kicker: "Ethos · Bestow",
+    desc: "Instant life insurance via Ethos — approved in minutes. Term, whole, and final expense plans available.",
+    primaryLabel: "Ethos · Apply",  primaryHref: "https://agents.ethoslife.com/invite/3d18", primaryExternal: true,
+    secondaryLabel: "Bestow Option", secondaryHref: "https://www.bestow.com/agents/hgi/?u=716e1720", secondaryExternal: true,
+  },
+  {
+    icon: "business", title: "Business Insurance", kicker: "Commercial",
+    desc: "Gas stations & convenience stores, hotels & motels, restaurants — coverage built for owners. BONDS available.",
+    primaryLabel: "Get Quote",      primaryHref: "https://app.boldpenguin.com/start/tajbizllcdbatrinitysolutions", primaryExternal: true,
+    secondaryLabel: "Talk to Agent", secondaryIsQuote: true,
+  },
+  {
+    icon: "workers",  title: "Workers Comp",       kicker: "SolePro",
+    desc: "Fast quotes for small to mid-sized businesses. Stay compliant, protect your team.",
+    primaryLabel: "SolePro Quote",  primaryHref: "https://app.solepro.com/AgencyProfile/TAJBIZLLCDBATrinitySolutions/f5686c4f-0acc-48da-bfc2-43f97737e716", primaryExternal: true,
+    secondaryLabel: "Talk to Agent", secondaryIsQuote: true,
+  },
+  {
+    icon: "travel",   title: "Travel & Visitors",  kicker: "GeoBlue · IMGlobal",
+    desc: "Coverage for travel abroad and for family visiting the United States.",
+    primaryLabel: "GeoBlue Travel", primaryHref: "https://www.geobluetravelinsurance.com/product_overview.cfm?link_id=169813", primaryExternal: true,
+    secondaryLabel: "Visitors USA", secondaryHref: "https://producer.imglobal.com/international-insurance-plans.aspx?imgac=540029", secondaryExternal: true,
+  },
+];
+
+const APPOINTMENTS = [
+  { icon: "doc",    title: "Tax Preparation",               duration: "1 hour",  price: "$99",          desc: "Personal and business returns. Year-round filing support." },
+  { icon: "shield", title: "Finances & Policy Review",      duration: "1 hour",  price: "Free",         desc: "Sit down with us to review your existing policies and financial picture." },
+  { icon: "spark",  title: "Project Management & Process",  duration: "1 hour",  price: "Free",         desc: "PMP-certified consultation on operations, processes, and team workflow." },
+  { icon: "users",  title: "Change Management",             duration: "1 hour",  price: "Free",         desc: "The people side of change — new orgs, new processes, new technology rollouts." },
+  { icon: "id",     title: "Passport & OCI Services",       duration: "1 hour",  price: "$250",         desc: "Visa assistance, passport renewal, OCI applications, and value-added travel services." },
+  { icon: "scroll", title: "Notary Services",               duration: "30 mins", price: "Price varies", desc: "Documents notarized at our office — appointment recommended." },
+];
+
+const CARRIERS = [
+  { name: "Progressive",  src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/progressive_20logo.png/_/rs_h_100_cg_true_m" },
+  { name: "Allstate",     src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/allstate.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Nationwide",   src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/nationwide.jpg/_/rs_h_100_cg_true_m" },
+  { name: "The Hartford", src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/the_20hartford.png/_/rs_h_100_cg_true_m" },
+  { name: "Liberty Mutual",src:"https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/liberty_20mutual.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Travelers",    src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/travellers.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Chubb",        src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/chubb.jpg/_/rs_h_100_cg_true_m" },
+  { name: "AIG",          src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/aig.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Cigna",        src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/cigna.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Anthem",       src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/anthem_20bcbs_20va.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Safeco",       src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/safeco.jpg/_/rs_h_100_cg_true_m" },
+  { name: "Foremost",     src: "https://img1.wsimg.com/isteam/ip/b8cb52fe_c39d_4111_a8ce_3a2dba74e251/foremost.jpg/_/rs_h_100_cg_true_m" },
+];
+
+const STATS = [
+  { value: "15+", label: "Years serving Virginia" },
+  { value: "30+", label: "Insurance carriers" },
+  { value: "24h", label: "Quote turnaround" },
+  { value: "A+",  label: "Better Business Bureau" },
+];
+
+/* ── Components ──────────────────────────────────────────────────────────── */
+
+function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const f = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", f, { passive: true });
+    return () => window.removeEventListener("scroll", f);
+  }, []);
   return (
-    <main className="min-h-screen bg-[#0a0f1e] flex flex-col">
-
-      {/* ── TOP BAR ── */}
-      <div className="bg-[#d4af37] text-[#0a0f1e] text-sm font-semibold text-center py-2 px-4">
-        📞 For Tax Preparation & Health Insurance — Call&nbsp;
-        <a href="tel:+14135792769" className="underline hover:no-underline">(413) 579-2769</a>
-      </div>
-
-      {/* ── HEADER ── */}
-      <header className="border-b border-[#d4af37]/20 px-6 py-4 sticky top-0 bg-[#0a0f1e]/95 backdrop-blur z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#d4af37] flex items-center justify-center">
-              <span className="text-[#0a0f1e] font-black text-lg">T</span>
-            </div>
-            <div>
-              <div className="text-white font-bold text-lg leading-tight">Trinity Solutions</div>
-              <div className="text-[#d4af37]/70 text-xs">Financial Consulting, with a Personal Touch</div>
-            </div>
+    <header className={`ts-hdr${scrolled ? " is-scrolled" : ""}`}>
+      <div className="ts-hdr-inner">
+        <a href="#" className="ts-hdr-brand" onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, color: "var(--ink)", fontSize: 18, lineHeight: 1 }}>T</span>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-white/70">
-            <a href="#services" className="hover:text-[#d4af37] transition-colors">Services</a>
-            <a href="#about" className="hover:text-[#d4af37] transition-colors">About</a>
-            <a href="#contact" className="hover:text-[#d4af37] transition-colors">Contact</a>
-            <Link
-              href="/quote"
-              className="bg-[#d4af37] text-[#0a0f1e] font-bold px-5 py-2 rounded-full hover:bg-[#e5c84a] transition-colors"
-            >
-              Free Quote
-            </Link>
-          </nav>
-          {/* Mobile CTA */}
-          <Link
-            href="/quote"
-            className="md:hidden bg-[#d4af37] text-[#0a0f1e] font-bold px-4 py-2 rounded-full text-sm"
-          >
-            Free Quote
+          <div>
+            <div className="ts-hdr-name">Trinity Solutions</div>
+            <div className="ts-hdr-tag">Financial consulting · since 2009</div>
+          </div>
+        </a>
+        <nav className="ts-hdr-nav">
+          <a href="#services">Services</a>
+          <a href="#bookings">Bookings</a>
+          <a href="#about">Agents</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <div className="ts-hdr-cta">
+          <a className="ts-hdr-phone" href="tel:+18049446226">
+            <Icon name="phone" size={14} />
+            <span style={{ fontFamily: "var(--font-mono)" }}>(804) 944-6226</span>
+          </a>
+          <Link href="/quote" className="ts-btn ts-btn-primary ts-btn-sm">
+            Free quote
+            <Icon name="arrow-right" size={14} />
           </Link>
         </div>
-      </header>
+      </div>
+    </header>
+  );
+}
 
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden px-6 py-24 flex items-center justify-center">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-[#d4af37]/5 rounded-full blur-3xl" />
+function ServiceCard({ service, onQuote }: { service: typeof SERVICES[0]; onQuote: () => void }) {
+  return (
+    <article className="ts-service-card">
+      <div className="ts-service-num ts-mono">0{SERVICES.indexOf(service) + 1}</div>
+      <div className="ts-service-icon">
+        <Icon name={service.icon} size={26} stroke={1.5} />
+      </div>
+      <div className="ts-service-body">
+        <span className="ts-eyebrow" style={{ display: "block", marginBottom: 8 }}>{service.kicker}</span>
+        <h3 className="ts-service-title">{service.title}</h3>
+        <p className="ts-service-desc">{service.desc}</p>
+      </div>
+      <div className="ts-service-ctas">
+        <a href={service.primaryHref} {...(service.primaryExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="ts-service-cta-primary">
+          {service.primaryLabel}
+          <Icon name="arrow-right" size={12} />
+        </a>
+        {service.secondaryIsQuote ? (
+          <button onClick={onQuote} className="ts-service-cta-secondary">
+            {service.secondaryLabel}
+          </button>
+        ) : (
+          <a href={service.secondaryHref} {...(service.secondaryExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="ts-service-cta-secondary">
+            {service.secondaryLabel}
+          </a>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function AgentCard({ name, role, creds, quote }: { name: string; role: string; creds: string[]; quote: string }) {
+  const initial = name.split(" ").map(s => s[0]).join("");
+  return (
+    <article className="ts-agent-card">
+      <div className="ts-agent-avatar">
+        <span className="ts-agent-avatar-text">{initial}</span>
+      </div>
+      <div className="ts-agent-body">
+        <span className="ts-eyebrow">{role}</span>
+        <h3 className="ts-agent-name">{name}</h3>
+        <p className="ts-agent-quote">"{quote}"</p>
+        <div className="ts-agent-creds">
+          {creds.map(c => <span key={c} className="ts-agent-cred">{c}</span>)}
         </div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-full px-4 py-2 text-sm text-[#d4af37] mb-8">
-            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse" />
-            Serving Clients Since 2009 · Glen Allen, Virginia
-          </div>
+      </div>
+    </article>
+  );
+}
 
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-4">
-            Your ONE STOP SHOP
-            <span className="block text-[#d4af37] mt-2">for ALL Insurance Needs</span>
-          </h1>
+function ContactRow({ icon, label, value }: { icon: string; label: string; value: React.ReactNode }) {
+  return (
+    <div className="ts-contact-row">
+      <div className="ts-contact-row-icon"><Icon name={icon} size={18} /></div>
+      <div>
+        <div className="ts-contact-row-label">{label}</div>
+        <div className="ts-contact-row-value">{value}</div>
+      </div>
+    </div>
+  );
+}
 
-          <p className="text-xl text-white/60 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Auto · Home · Health · Life · Business · Workers Comp · Travel · Bonds.
-            Upload your current policy and we'll find you better coverage — for less.
-          </p>
+/* ── Page ────────────────────────────────────────────────────────────────── */
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
-            <Link
-              href="/quote"
-              className="inline-flex items-center gap-2 bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-black text-lg px-10 py-4 rounded-full transition-all duration-200 shadow-lg shadow-[#d4af37]/20 hover:shadow-[#d4af37]/40 hover:scale-105"
-            >
-              Get a Free Quote
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            <a
-              href="https://wa.me/18049446226"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/40 hover:border-[#25D366] text-[#25D366] font-bold text-lg px-10 py-4 rounded-full transition-all duration-200 hover:bg-[#25D366]/20"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              WhatsApp Us
-            </a>
-            <a
-              href="tel:+18049446226"
-              className="inline-flex items-center gap-2 border border-white/20 hover:border-[#d4af37]/50 text-white/70 hover:text-white font-medium text-lg px-10 py-4 rounded-full transition-all duration-200"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              (804) 944-6226
-            </a>
-          </div>
+export default function HomePage() {
+  const handleQuote = () => window.location.href = "/quote";
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-xl mx-auto">
-            {[
-              { value: "15+", label: "Years Experience" },
-              { value: "10+", label: "Insurance Carriers" },
-              { value: "24hr", label: "Response Time" },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <div className="text-3xl font-black text-[#d4af37]">{s.value}</div>
-                <div className="text-xs text-white/50 mt-1">{s.label}</div>
+  return (
+    <div className="ts-shell">
+
+      {/* Announce bar */}
+      <div className="ts-announce">
+        <div className="ts-announce-inner">
+          <span className="ts-eyebrow" style={{ color: "var(--ink)", opacity: 0.7 }}>Tax Prep & Health Insurance</span>
+          <span className="ts-announce-divider" />
+          <a href="tel:+14135792769" className="ts-announce-phone">
+            <Icon name="phone" size={13} />
+            (413) 579-2769
+          </a>
+        </div>
+      </div>
+
+      {/* Header */}
+      <Header />
+
+      {/* Hero */}
+      <section className="ts-hero">
+        <div className="ts-container">
+          <div className="ts-hero-inner">
+            <div className="ts-hero-eyebrow ts-pill">
+              <span className="dot" />
+              <span>Independent agency · Glen Allen, Virginia · Since 2009</span>
+            </div>
+
+            <h1 className="ts-hero-title">
+              Insurance that<br />
+              <em className="ts-hero-italic">actually fits</em><br />
+              your life.
+            </h1>
+
+            <p className="ts-hero-sub">
+              Upload your current policy, or answer a few plain-English questions.
+              We compare across 30+ carriers and send you a better quote within 24 hours.
+              No call center. Real agents. Same family agency since 2009.
+            </p>
+
+            <div className="ts-hero-cta">
+              <Link href="/quote" className="ts-btn ts-btn-primary ts-btn-lg">
+                Start your quote
+                <Icon name="arrow-right" size={16} />
+              </Link>
+              <a href="https://wa.me/18049446226" target="_blank" rel="noopener noreferrer" className="ts-btn ts-btn-ghost ts-btn-lg">
+                <Icon name="chat" size={16} />
+                WhatsApp us
+              </a>
+              <div className="ts-hero-call">
+                <span className="ts-eyebrow">or call</span>
+                <span className="ts-hero-call-num">(804) 944-6226</span>
               </div>
+            </div>
+
+            <div className="ts-hero-stats">
+              {STATS.map(s => (
+                <div key={s.label} className="ts-hero-stat">
+                  <div className="ts-hero-stat-v">{s.value}</div>
+                  <div className="ts-hero-stat-l">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <aside className="ts-hero-aside" aria-hidden="true">
+            <div className="ts-hero-aside-inner">
+              <span className="ts-eyebrow">A note from your agent</span>
+              <p className="ts-hero-aside-quote">
+                "The finest iron comes from the hottest fire."
+              </p>
+              <p className="ts-hero-aside-attr">— Abhi Thakar, Agency Principal · PMP® · SAFe® · Notary</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* Carrier strip */}
+      <section className="ts-carriers">
+        <div className="ts-container">
+          <p className="ts-carriers-label">We shop these carriers for you</p>
+        </div>
+        <div className="ts-marquee">
+          <div className="ts-marquee-track">
+            {[...CARRIERS, ...CARRIERS].map((c, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={c.src} alt={c.name} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── SERVICES ── */}
-      <section id="services" className="px-6 py-20 bg-[#0d1530]">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-black text-center text-white mb-2">What We Cover</h2>
-          <p className="text-center text-white/50 mb-12">Personal, business, and specialty insurance — all in one place</p>
+      {/* Services */}
+      <section id="services" className="ts-section ts-services">
+        <div className="ts-container">
+          <div className="ts-section-head">
+            <span className="ts-eyebrow">What we cover · 01</span>
+            <h2 className="ts-section-title">
+              Everything your household,<br />
+              your business, your people need.
+            </h2>
+            <p className="ts-section-sub">
+              Personal, commercial, health, life, travel. One agency, one relationship,
+              30+ carriers. We do the comparison shopping so you don&apos;t have to.
+            </p>
+          </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                icon: "🚗",
-                title: "Auto & Home",
-                desc: "Protect your vehicles and property with comprehensive personal lines coverage.",
-                primary: { label: "Instant Quote", href: "https://trinitysolutionsins.propeller.insure/axelerator-public/", external: true },
-                secondary: { label: "Get Help", href: "/quote?type=both" },
-              },
-              {
-                icon: "❤️",
-                title: "Health Insurance",
-                desc: "Anthem BCBS of VA, short-term, student, and out-of-USA travel health plans.",
-                primary: { label: "Anthem Quote", href: "https://agentsite.anthem.com/agentsite/ac/TrinitySolutions99", external: true },
-                secondary: { label: "Other Plans", href: "/quote?type=health" },
-              },
-              {
-                icon: "🌿",
-                title: "Life Insurance",
-                desc: "Instant life coverage via ETHOS — approved in minutes. Also offering Bestow plans.",
-                primary: { label: "Ethos · Apply Now", href: "https://agents.ethoslife.com/invite/3d18", external: true },
-                secondary: { label: "Bestow Option", href: "https://www.bestow.com/agents/hgi/?u=716e1720&utm_source=Abhishek_Thakar&utm_medium=agents", external: true },
-              },
-              {
-                icon: "🏨",
-                title: "Business Insurance",
-                desc: "Gas stations, convenience stores, hotels, motels, restaurants — we cover them all.",
-                primary: { label: "Get Quote", href: "https://app.boldpenguin.com/start/tajbizllcdbatrinitysolutions", external: true },
-                secondary: { label: "Talk to Agent", href: "/quote?type=business" },
-              },
-              {
-                icon: "👷",
-                title: "Workers Comp",
-                desc: "Make sure your employees are covered. Fast quotes for businesses of all sizes.",
-                primary: { label: "SolePro Quote", href: "https://app.solepro.com/AgencyProfile/TAJBIZLLCDBATrinitySolutions/f5686c4f-0acc-48da-bfc2-43f97737e716", external: true },
-                secondary: { label: "Talk to Agent", href: "/quote?type=workers_comp" },
-              },
-              {
-                icon: "✈️",
-                title: "Travel & Visitors",
-                desc: "Cover yourself when visiting or hosting family from abroad. Out-of-USA plans available.",
-                primary: { label: "GeoBlue Travel", href: "https://www.geobluetravelinsurance.com/product_overview.cfm?link_id=169813", external: true },
-                secondary: { label: "Visitors USA", href: "https://producer.imglobal.com/international-insurance-plans.aspx?imgac=540029", external: true },
-              },
-            ].map((s) => (
-              <div
-                key={s.title}
-                className="bg-[#0a0f1e] border border-white/10 rounded-2xl p-7 hover:border-[#d4af37]/50 transition-all duration-200 group flex flex-col"
-              >
-                <div className="text-4xl mb-4">{s.icon}</div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#d4af37] transition-colors">{s.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed mb-5 flex-1">{s.desc}</p>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href={s.primary.href}
-                    {...(s.primary.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-bold text-sm py-2.5 px-4 rounded-lg text-center transition-colors"
-                  >
-                    {s.primary.label} →
-                  </a>
-                  <a
-                    href={s.secondary.href}
-                    {...(s.secondary.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                    className="border border-white/15 hover:border-[#d4af37]/40 text-white/70 hover:text-white text-sm py-2.5 px-4 rounded-lg text-center transition-colors"
-                  >
-                    {s.secondary.label}
-                  </a>
-                </div>
-              </div>
+          <div className="ts-services-grid">
+            {SERVICES.map(s => (
+              <ServiceCard key={s.title} service={s} onQuote={handleQuote} />
             ))}
           </div>
 
           {/* Will & Trust callout */}
-          <div className="mt-8 bg-[#0a0f1e] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">📜</div>
-              <div>
-                <h3 className="text-white font-bold text-lg">Will & Trust Planning</h3>
-                <p className="text-white/50 text-sm">Protect your legacy with NetLaw estate planning.</p>
-              </div>
+          <div className="ts-callout">
+            <div className="ts-callout-icon"><Icon name="scroll" size={24} /></div>
+            <div className="ts-callout-body">
+              <span className="ts-eyebrow">Beyond insurance</span>
+              <h3 className="ts-callout-title">Wills, trusts, and estate planning</h3>
+              <p className="ts-callout-desc">
+                We also help you protect your legacy. NetLaw estate planning — affordable,
+                attorney-reviewed documents, set up in under an hour.
+              </p>
             </div>
-            <a
-              href="https://i.netlaw.com/hze-mbxc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-bold text-sm py-2.5 px-6 rounded-lg transition-colors whitespace-nowrap"
-            >
-              Start Estate Plan →
+            <a href="https://i.netlaw.com/hze-mbxc" target="_blank" rel="noopener noreferrer" className="ts-btn ts-btn-ghost">
+              Start estate plan
+              <Icon name="arrow-right" size={14} />
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-black text-white mb-2">How It Works</h2>
-          <p className="text-white/50 mb-14">Get a better rate in 3 simple steps</p>
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              { step: "1", title: "Fill the Form", desc: "Enter your name, contact info, and the type of insurance you need. Takes 2 minutes." },
-              { step: "2", title: "Upload Your Policy", desc: "Snap a photo or upload your current policy PDF. Our AI reads it automatically." },
-              { step: "3", title: "Agent Calls You", desc: "Within 24 hours, Abhi or Nirmit will call you with better options and pricing." },
-            ].map((step) => (
-              <div key={step.step} className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full bg-[#d4af37] text-[#0a0f1e] font-black text-2xl flex items-center justify-center mb-4 shadow-lg shadow-[#d4af37]/20">
-                  {step.step}
+      {/* Bookings */}
+      <section id="bookings" className="ts-section ts-bookings">
+        <div className="ts-container">
+          <div className="ts-section-head">
+            <span className="ts-eyebrow">Book a consultation · 02</span>
+            <h2 className="ts-section-title">
+              Sit down with us.<br />
+              <em>Tax, notary, planning, and more.</em>
+            </h2>
+            <p className="ts-section-sub">
+              We&apos;re more than insurance. Book a consultation for tax preparation, notary
+              services, passport &amp; OCI, project &amp; change management, or a full
+              review of your existing policies.
+            </p>
+          </div>
+
+          <div className="ts-bookings-grid">
+            {APPOINTMENTS.map(b => (
+              <article key={b.title} className="ts-booking-card">
+                <div className="ts-booking-head">
+                  <div className="ts-booking-icon">
+                    <Icon name={b.icon} size={20} stroke={1.5} />
+                  </div>
+                  <div className="ts-booking-meta">
+                    <span className="ts-booking-duration">{b.duration}</span>
+                    <span className="ts-booking-price">{b.price}</span>
+                  </div>
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                <h3 className="ts-booking-title">{b.title}</h3>
+                <p className="ts-booking-desc">{b.desc}</p>
+                <a className="ts-booking-cta" href="#contact">
+                  Book appointment
+                  <Icon name="arrow-right" size={14} />
+                </a>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="ts-section ts-how">
+        <div className="ts-container">
+          <div className="ts-section-head">
+            <span className="ts-eyebrow">How it works · 03</span>
+            <h2 className="ts-section-title">
+              Three steps. <em>Twenty-four hours.</em>
+            </h2>
+          </div>
+
+          <div className="ts-how-grid">
+            {[
+              { n: "01", t: "Tell us about you",  d: "First name, last name, who's in the household, what you need to cover. Takes about two minutes. No sales pressure." },
+              { n: "02", t: "Upload or answer",   d: "Have a current policy? Drop the PDF in — our AI reads it and we match or beat your coverage. No PDF? We'll walk through it in plain English." },
+              { n: "03", t: "Real agent calls",   d: "Within 24 hours, one of our agents personally calls you with better options, real pricing, and answers to every question." },
+            ].map(step => (
+              <div key={step.n} className="ts-how-step">
+                <div className="ts-how-num ts-mono">{step.n}</div>
+                <div className="ts-how-line" aria-hidden="true" />
+                <h3 className="ts-how-title">{step.t}</h3>
+                <p className="ts-how-desc">{step.d}</p>
               </div>
             ))}
           </div>
-          <Link
-            href="/quote"
-            className="inline-flex items-center gap-2 mt-12 bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-black text-lg px-10 py-4 rounded-full transition-all hover:scale-105 shadow-lg shadow-[#d4af37]/20"
-          >
-            Start Now — It's Free
-          </Link>
-        </div>
-      </section>
 
-      {/* ── ABOUT ── */}
-      <section id="about" className="px-6 py-20 bg-[#0d1530]">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-black text-center text-white mb-2">Meet Your Agents</h2>
-          <p className="text-center text-white/50 mb-14">Real people, real relationships — not a call center</p>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#0a0f1e] border border-white/10 rounded-2xl p-8">
-              <div className="w-14 h-14 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-2xl mb-5">A</div>
-              <h3 className="text-white font-bold text-xl mb-1">Abhi Thakar</h3>
-              <p className="text-[#d4af37] text-sm font-semibold mb-4">Agency Principal · PMP® · LSSmBB · SAFe® · Notary Public · Tax Preparer</p>
-              <p className="text-white/60 text-sm leading-relaxed">
-                "Since 2009, I've been helping businesses and individuals safeguard their assets and plan for the retirement they want. I love leading people and processes — 10+ years of experience managing people and finances."
-              </p>
-            </div>
-            <div className="bg-[#0a0f1e] border border-white/10 rounded-2xl p-8">
-              <div className="w-14 h-14 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-2xl mb-5">N</div>
-              <h3 className="text-white font-bold text-xl mb-1">Nirmit Patel</h3>
-              <p className="text-[#d4af37] text-sm font-semibold mb-4">Senior Partner</p>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Passionate about helping companies and individuals diversify portfolios, manage assets, analyze market trends, and reduce financial risk. Committed to personalized service for you and your family.
-              </p>
-            </div>
+          <div className="ts-how-cta">
+            <Link href="/quote" className="ts-btn ts-btn-primary ts-btn-lg">
+              Start your quote — it&apos;s free
+              <Icon name="arrow-right" size={16} />
+            </Link>
+            <span className="ts-how-cta-note">No credit card. No commitment.</span>
           </div>
-          <p className="text-center text-white/40 text-sm mt-8 italic">"The Finest IRON Comes From the Hottest Fire"</p>
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
-      <section id="contact" className="px-6 py-20">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-black text-center text-white mb-2">Contact Us</h2>
-          <p className="text-center text-white/50 mb-12">We're here Monday–Friday 9am–5pm · Saturday by appointment</p>
+      {/* Agents */}
+      <section id="about" className="ts-section ts-agents">
+        <div className="ts-container">
+          <div className="ts-section-head">
+            <span className="ts-eyebrow">Meet your agents · 04</span>
+            <h2 className="ts-section-title">
+              Real people. Real relationships.<br />
+              <em>Not a call center.</em>
+            </h2>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-10">
-            {/* Contact info */}
-            <div className="bg-[#0d1530] border border-white/10 rounded-2xl p-8 space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">📍</div>
-                <div>
-                  <div className="text-white font-semibold mb-1">Office</div>
-                  <div className="text-white/60 text-sm">5348 Twin Hickory Road<br/>Glen Allen, Virginia 23059</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">📞</div>
-                <div>
-                  <div className="text-white font-semibold mb-1">Phone</div>
-                  <a href="tel:+18049446226" className="text-[#d4af37] hover:underline text-sm block">(804) 944-6226</a>
-                  <a href="tel:+14135792769" className="text-[#d4af37] hover:underline text-sm block">(413) 579-2769</a>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">✉️</div>
-                <div>
-                  <div className="text-white font-semibold mb-1">Email</div>
-                  <a href="mailto:info@taj-biz.com" className="text-[#d4af37] hover:underline text-sm block">info@taj-biz.com</a>
-                  <a href="mailto:tajbizllc@gmail.com" className="text-[#d4af37] hover:underline text-sm block">tajbizllc@gmail.com</a>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">⏰</div>
-                <div>
-                  <div className="text-white font-semibold mb-1">Hours</div>
-                  <div className="text-white/60 text-sm">Mon–Fri: 9:00am – 5:00pm<br/>Saturday: By appointment<br/>Sunday: Closed</div>
-                </div>
+          <div className="ts-agents-grid">
+            <AgentCard
+              name="Abhi Thakar"
+              role="Agency Principal"
+              creds={["PMP®", "LSSmBB", "SAFe® Advanced Scrum Master", "Notary Public", "Tax Preparer"]}
+              quote="Since 2009, I've been helping families and businesses safeguard their assets and plan for the retirement they want. I love leading people and processes."
+            />
+            <AgentCard
+              name="Nirmit Patel"
+              role="Senior Partner"
+              creds={["Portfolio Strategy", "Asset Management", "Risk Analysis"]}
+              quote="Passionate about helping companies and individuals diversify portfolios, manage assets, analyze market trends, and reduce financial risk."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className="ts-section ts-contact">
+        <div className="ts-container">
+          <div className="ts-contact-grid">
+            <div className="ts-contact-side">
+              <span className="ts-eyebrow" style={{ display: "block", marginBottom: 16 }}>Get in touch · 05</span>
+              <h2 className="ts-contact-title">
+                Talk to us.<br />
+                <em>Any way you&apos;d like.</em>
+              </h2>
+              <p className="ts-contact-sub">
+                Monday–Friday, 9am to 5pm Eastern. Saturday by appointment.
+                We respond to WhatsApp messages within the hour during business days.
+              </p>
+
+              <div className="ts-contact-list">
+                <ContactRow icon="pin" label="Office" value={<>5348 Twin Hickory Road<br />Glen Allen, Virginia 23059</>} />
+                <ContactRow icon="phone" label="Phone" value={<>
+                  <a href="tel:+18049446226" className="ts-contact-link">(804) 944-6226</a><br />
+                  <a href="tel:+14135792769" className="ts-contact-link">(413) 579-2769</a>
+                </>} />
+                <ContactRow icon="mail" label="Email" value={<>
+                  <a href="mailto:info@taj-biz.com" className="ts-contact-link">info@taj-biz.com</a><br />
+                  <a href="mailto:tajbizllc@gmail.com" className="ts-contact-link">tajbizllc@gmail.com</a>
+                </>} />
+                <ContactRow icon="clock" label="Hours" value={<>
+                  Mon–Fri · 9:00am – 5:00pm<br />
+                  Saturday · By appointment<br />
+                  Sunday · Closed
+                </>} />
               </div>
             </div>
 
-            {/* Quick actions */}
-            <div className="flex flex-col gap-4">
-              <Link
-                href="/quote"
-                className="flex items-center gap-4 bg-[#d4af37] hover:bg-[#e5c84a] text-[#0a0f1e] font-black rounded-2xl px-8 py-6 transition-all hover:scale-[1.02]"
-              >
-                <span className="text-3xl">📋</span>
-                <div>
-                  <div className="text-lg">Get a Free Quote</div>
-                  <div className="text-sm font-normal opacity-70">Upload your policy · AI-powered comparison</div>
+            <div className="ts-contact-actions">
+              <Link href="/quote" className="ts-contact-action ts-contact-action-primary">
+                <div className="ts-contact-action-icon"><Icon name="doc" size={22} /></div>
+                <div className="ts-contact-action-body">
+                  <span className="ts-contact-action-title">Get a free quote</span>
+                  <span className="ts-contact-action-sub">Upload your policy · AI comparison</span>
                 </div>
+                <Icon name="arrow-right" size={18} />
               </Link>
-              <a
-                href="https://wa.me/18049446226"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#25D366]/10 border border-[#25D366]/40 hover:border-[#25D366] hover:bg-[#25D366]/20 text-white font-bold rounded-2xl px-8 py-6 transition-all"
-              >
-                <span className="text-3xl">💬</span>
-                <div>
-                  <div className="text-lg text-[#25D366]">WhatsApp Us</div>
-                  <div className="text-sm font-normal text-white/50">Message us directly — fast response</div>
+              <a href="https://wa.me/18049446226" target="_blank" rel="noopener noreferrer" className="ts-contact-action ts-contact-action-whatsapp">
+                <div className="ts-contact-action-icon" style={{ color: "var(--whatsapp)" }}><Icon name="chat" size={22} /></div>
+                <div className="ts-contact-action-body">
+                  <span className="ts-contact-action-title" style={{ color: "var(--whatsapp)" }}>WhatsApp us</span>
+                  <span className="ts-contact-action-sub">Fast response · message us anytime</span>
                 </div>
+                <Icon name="arrow-right" size={18} />
               </a>
-              <a
-                href="tel:+18049446226"
-                className="flex items-center gap-4 bg-white/5 border border-white/10 hover:border-[#d4af37]/40 text-white font-bold rounded-2xl px-8 py-6 transition-all"
-              >
-                <span className="text-3xl">📞</span>
-                <div>
-                  <div className="text-lg">(804) 944-6226</div>
-                  <div className="text-sm font-normal text-white/50">Call during business hours</div>
+              <a href="tel:+18049446226" className="ts-contact-action">
+                <div className="ts-contact-action-icon"><Icon name="phone" size={22} /></div>
+                <div className="ts-contact-action-body">
+                  <span className="ts-contact-action-title">(804) 944-6226</span>
+                  <span className="ts-contact-action-sub">Call during business hours</span>
                 </div>
+                <Icon name="arrow-right" size={18} />
               </a>
-              <div className="flex gap-4 pt-2">
-                <a href="https://facebook.com/TrinitySolutions99" target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-white/10 hover:border-[#d4af37]/40 rounded-xl py-3 text-white/50 hover:text-[#d4af37] text-sm transition-all">Facebook</a>
-                <a href="https://instagram.com/TrinitySolutions99" target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-white/10 hover:border-[#d4af37]/40 rounded-xl py-3 text-white/50 hover:text-[#d4af37] text-sm transition-all">Instagram</a>
-                <a href="https://linkedin.com/in/abhi-thakar" target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-white/10 hover:border-[#d4af37]/40 rounded-xl py-3 text-white/50 hover:text-[#d4af37] text-sm transition-all">LinkedIn</a>
+
+              <div className="ts-contact-social">
+                <a href="https://facebook.com/TrinitySolutions99" target="_blank" rel="noopener noreferrer">Facebook</a>
+                <a href="https://instagram.com/TrinitySolutions99" target="_blank" rel="noopener noreferrer">Instagram</a>
+                <a href="https://linkedin.com/in/abhi-thakar" target="_blank" rel="noopener noreferrer">LinkedIn</a>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-[#080c18] border-t border-white/10 px-6 py-8">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/40">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-[#d4af37] flex items-center justify-center">
-              <span className="text-[#0a0f1e] font-black text-xs">T</span>
+      {/* Footer */}
+      <footer className="ts-footer">
+        <div className="ts-container ts-footer-inner">
+          <div className="ts-footer-brand">
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 400, color: "var(--ink)", fontSize: 15, lineHeight: 1 }}>T</span>
             </div>
-            <span>© 2024 Trinity Solutions LLC. All rights reserved.</span>
+            <div>
+              <div className="ts-footer-name">Trinity Solutions</div>
+              <div className="ts-footer-tag">Financial consulting, with a personal touch</div>
+            </div>
           </div>
-          <div className="flex gap-6">
+          <div className="ts-footer-meta">
+            <span>© 2026 Trinity Solutions LLC (DBA: TAJBIZ LLC)</span>
+            <span>·</span>
             <span>Glen Allen, Virginia</span>
             <span>·</span>
-            <a href="mailto:info@taj-biz.com" className="hover:text-[#d4af37] transition-colors">info@taj-biz.com</a>
+            <a href="mailto:info@taj-biz.com" className="ts-contact-link">info@taj-biz.com</a>
           </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
